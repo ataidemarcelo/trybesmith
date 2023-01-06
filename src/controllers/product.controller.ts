@@ -12,16 +12,35 @@ class ProductController {
   }
 
   public create = async (req: Request, res: Response) => {
-    const product: ProductRequest = req.body;
+    try {
+      const product: ProductRequest = req.body;
 
-    const productCreated = await this.service.create(product);
+      const productCreated = await this.service.create(product);
+
+      if (!productCreated) {
+        throw new Error('Error when trying to register product');
+      }
     
-    res.status(statusCodes.CREATED).json(productCreated);
+      res.status(statusCodes.CREATED).json(productCreated);
+    } catch (err) {
+      const { message } = err as Error;
+      res.status(statusCodes.BAD_REQUEST).json({ message }); 
+    }
   };
 
   public getAll = async (_req: Request, res: Response) => {
-    const products = await this.service.getAll();
-    res.status(statusCodes.OK).json(products);
+    try {
+      const products = await this.service.getAll();
+
+      if (!products) {
+        throw new Error('Error when trying to read products');
+      }
+
+      res.status(statusCodes.OK).json(products);
+    } catch (err) {
+      const { message } = err as Error;
+      res.status(statusCodes.BAD_REQUEST).json({ message }); 
+    }
   };
 }
 
