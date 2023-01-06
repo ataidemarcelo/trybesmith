@@ -12,5 +12,6 @@ const productController = new ProductController(productService);
 const router: Router = Router();
 
 router.post('/', productController.create);
+router.get('/', productController.getAll);
 
 export default router;
