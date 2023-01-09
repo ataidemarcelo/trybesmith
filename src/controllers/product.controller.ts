@@ -1,21 +1,27 @@
 import { Request, Response } from 'express';
+import ValidationError from '../errors/validation.error';
 import { ProductRequest } from '../interfaces/product.interface';
 
 import ProductService from '../services/product.service';
+import ValidationService from '../services/validation.service';
 import statusCodes from '../utils/statusCodes';
 
 class ProductController {
   private service: ProductService;
 
-  constructor(service: ProductService) {
+  private validationService: ValidationService<ProductRequest>;
+
+  constructor(service: ProductService, validationService: ValidationService<ProductRequest>) {
     this.service = service;
+    this.validationService = validationService;
   }
 
   public create = async (req: Request, res: Response) => {
     try {
-      const product: ProductRequest = req.body;
+      const { amount, name }: ProductRequest = req.body;
+      this.validationService.validate({ amount, name });
 
-      const productCreated = await this.service.create(product);
+      const productCreated = await this.service.create({ amount, name });
 
       if (!productCreated) {
         throw new Error('Error when trying to register product');
@@ -23,7 +29,10 @@ class ProductController {
     
       res.status(statusCodes.CREATED).json(productCreated);
     } catch (err) {
-      const { message } = err as Error;
+      const { name, message, statusCode } = err as ValidationError;
+      if (name === 'ValidationError') {
+        return res.status(statusCode).json({ message });
+      }
       res.status(statusCodes.BAD_REQUEST).json({ message }); 
     }
   };
